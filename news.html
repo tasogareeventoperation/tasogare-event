@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>お知らせ - 誰そ彼色に埋め尽くせ</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
+            line-height: 1.8;
+            color: #333;
+            background: #f5f0e8;
+        }
+
+        /* ローディング画面 */
+        #loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #5d2a16;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.5s, visibility 0.5s;
+        }
+
+        #loading.fade-out {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .sk-folding-cube {
+            margin: 20px auto;
+            width: 60px;
+            height: 60px;
+            position: relative;
+            transform: rotateZ(45deg);
+        }
+
+        .sk-folding-cube .sk-cube {
+            float: left;
+            width: 50%;
+            height: 50%;
+            position: relative;
+            transform: scale(1.1);
+        }
+
+        .sk-folding-cube .sk-cube:before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #d3d4c1;
+            animation: sk-foldCubeAngle 2.4s infinite linear both;
+            transform-origin: 100% 100%;
+        }
+
+        .sk-folding-cube .sk-cube2 {
+            transform: scale(1.1) rotateZ(90deg);
+        }
+
+        .sk-folding-cube .sk-cube3 {
+            transform: scale(1.1) rotateZ(180deg);
+        }
+
+        .sk-folding-cube .sk-cube4 {
+            transform: scale(1.1) rotateZ(270deg);
+        }
+
+        .sk-folding-cube .sk-cube2:before {
+            animation-delay: 0.3s;
+        }
+
+        .sk-folding-cube .sk-cube3:before {
+            animation-delay: 0.6s;
+        }
+
+        .sk-folding-cube .sk-cube4:before {
+            animation-delay: 0.9s;
+        }
+
+        @keyframes sk-foldCubeAngle {
+            0%, 10% {
+                transform: perspective(140px) rotateX(-180deg);
+                opacity: 0;
+            }
+            25%, 75% {
+                transform: perspective(140px) rotateX(0deg);
+                opacity: 1;
+            }
+            90%, 100% {
+                transform: perspective(140px) rotateY(180deg);
+                opacity: 0;
+            }
+        }
+
+        .banner {
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .banner img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        nav {
+            background: #3b180a;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+
+        nav ul {
+            list-style: none;
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0;
+        }
+
+        nav li {
+            flex: 1;
+            min-width: 150px;
+            text-align: center;
+        }
+
+        nav a {
+            display: block;
+            color: white;
+            text-decoration: none;
+            padding: 15px 20px;
+            transition: all 0.3s;
+            font-weight: 500;
+            border-bottom: 3px solid transparent;
+        }
+
+        nav a:hover, nav a.active {
+            background: #5d2a16;
+            border-bottom-color: #9f704b;
+        }
+
+        .page-header {
+            background: linear-gradient(135deg, #5d2a16 0%, #3b180a 100%);
+            color: white;
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .page-header h1 {
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .section {
+            background: white;
+            border-radius: 15px;
+            padding: 40px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        }
+
+        /* アコーディオンスタイル */
+        .news-accordion {
+            border-bottom: 1px solid #e8ddd0;
+        }
+
+        .news-accordion:last-child {
+            border-bottom: none;
+        }
+
+        details {
+            margin-bottom: 0;
+        }
+
+        summary {
+            padding: 20px;
+            cursor: pointer;
+            list-style: none;
+            transition: background 0.3s;
+            border-left: 4px solid transparent;
+        }
+
+        summary:hover {
+            background: #f8f9fa;
+            border-left-color: #9f704b;
+        }
+
+        summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .summary-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .news-date {
+            color: #999;
+            font-size: 0.95em;
+        }
+
+        .news-category {
+            display: inline-block;
+            background: #5d2a16;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 0.85em;
+            font-weight: bold;
+        }
+
+        .news-category.important {
+            background: #d9534f;
+        }
+
+        .news-category.info {
+            background: #5bc0de;
+        }
+
+        .news-title {
+            color: #3b180a;
+            font-size: 1.3em;
+            font-weight: bold;
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .arrow {
+            color: #9f704b;
+            font-size: 1.2em;
+            transition: transform 0.3s;
+            margin-left: auto;
+        }
+
+        details[open] .arrow {
+            transform: rotate(90deg);
+        }
+
+        .news-content {
+            padding: 0 20px 20px 20px;
+            color: #555;
+            line-height: 1.8;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .news-content p {
+            margin-bottom: 10px;
+        }
+
+        /* スムーズなアニメーション用 */
+        .news-content {
+            overflow: hidden;
+            transition: max-height 0.3s ease-out, opacity 0.3s ease-out;
+        }
+
+        details:not([open]) .news-content {
+            max-height: 0;
+            opacity: 0;
+        }
+
+        details[open] .news-content {
+            max-height: 1000px;
+            opacity: 1;
+        }
+
+        footer {
+            background: #2c3e50;
+            color: white;
+            text-align: center;
+            padding: 30px 20px;
+            margin-top: 50px;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .footer-links a {
+            color: white;
+            text-decoration: none;
+            transition: opacity 0.3s;
+        }
+
+        .footer-links a:hover {
+            opacity: 0.7;
+        }
+
+        @media (max-width: 768px) {
+            .page-header h1 {
+                font-size: 1.8em;
+            }
+
+            .section {
+                padding: 25px;
+            }
+
+            summary {
+                padding: 15px;
+            }
+
+            .summary-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .news-title {
+                font-size: 1.1em;
+            }
+
+            nav li {
+                min-width: 120px;
+            }
+
+            nav a {
+                padding: 12px 10px;
+                font-size: 0.9em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- ローディング画面 -->
+    <div id="loading">
+        <div class="sk-folding-cube">
+            <div class="sk-cube1 sk-cube"></div>
+            <div class="sk-cube2 sk-cube"></div>
+            <div class="sk-cube4 sk-cube"></div>
+            <div class="sk-cube3 sk-cube"></div>
+        </div>
+    </div>
+
+    <div class="banner">
+        <img src="banner.png" alt="誰そ彼色に埋め尽くせ バナー">
+    </div>
+
+    <nav>
+        <ul>
+            <li><a href="index.html">ホーム</a></li>
+            <li><a href="news.html" class="active">お知らせ</a></li>
+            <li><a href="guide.html">参加ガイド</a></li>
+            <li><a href="materials.html">素材配布</a></li>
+            <li><a href="changelog.html">更新履歴</a></li>
+        </ul>
+    </nav>
+
+    <div class="page-header">
+        <h1>お知らせ</h1>
+    </div>
+
+    <div class="container">
+        <section class="section">
+            <!-- アコーディオン形式のお知らせ -->
+            
+           <div class="news-accordion">
+                <details>
+                    <summary>
+                        <div class="summary-header">
+                            <span class="news-date">2025.10.13</span>
+                            <span class="news-category important">重要</span>
+                            <span class="news-title">サークル募集を締め切りました</span>
+                            <span class="arrow">▶</span>
+                        </div>
+                    </summary>
+                    <div class="news-content">
+                        <p>サークル参加の募集を締め切りました。</p>
+                        <p>現在サークル配置を行なっております。サークル配置確定のご連絡は告知Xまたは当告知サイトからお知らせいたします。</p>
+                    </div>
+                </details>
+            </div>
+            
+             <div class="news-accordion">
+                <details>
+                    <summary>
+                        <div class="summary-header">
+                            <span class="news-date">2025.10.14</span>
+                            <span class="news-category">お知らせ</span>
+                            <span class="news-title">公式サイトをリニューアルしました</span>
+                            <span class="arrow">▶</span>
+                        </div>
+                    </summary>
+                    <div class="news-content">
+                        <p>誰そ彼色に埋め尽くせの公式サイトをリニューアルいたしました。今後はこちらのサイトでも最新情報をお届けします。ブックマークへの登録をお願いいたします。</p>
+                    </div>
+                </details>
+            </div>
+
+            <div class="news-accordion">
+                <details>
+                    <summary>
+                        <div class="summary-header">
+                            <span class="news-date">2025.9.17</span>
+                            <span class="news-category info">告知</span>
+                            <span class="news-title">イベント会場マップのアイデア募集中</span>
+                            <span class="arrow">▶</span>
+                        </div>
+                    </summary>
+                    <div class="news-content">
+                        <p>イベント会場で使用するマップのアイデアを募集しています！</p>
+                        <p>「特典のティーパーティ机が欲しい」「アニメの演習の森が欲しい」など、皆様のアイデアをお待ちしております。</p>
+                        <p>アイデアは<a href="https://wavebox.me/wave/9739cj1e0htcka7x/" target="_blank" style="color: #5d2a16; font-weight: bold;">Wavebox（匿名箱）</a>よりお送りください。</p>
+                    </div>
+                </details>
+            </div>
+            
+            <div class="news-accordion">
+                <details>
+                    <summary>
+                        <div class="summary-header">
+                            <span class="news-date">2025.3.11</span>
+                            <span class="news-category">お知らせ</span>
+                            <span class="news-title">サークル参加申込を開始しました</span>
+                            <span class="arrow">▶</span>
+                        </div>
+                    </summary>
+                    <div class="news-content">
+                        <p>サークル参加の申込受付を開始いたしました。締め切りは11月10日(日) 23:59までとなります。</p>
+                        <p>詳細は「初心者案内」ページのサークル参加についてをご確認ください。たくさんのご参加をお待ちしております！</p>
+                    </div>
+                </details>
+            </div>
+
+            <div class="news-accordion">
+                <details>
+                    <summary>
+                        <div class="summary-header">
+                            <span class="news-date">2025.2.8</span>
+                            <span class="news-category info">告知</span>
+                            <span class="news-title">イベントの開催が決定しました</span>
+                            <span class="arrow">▶</span>
+                        </div>
+                    </summary>
+                    <div class="news-content">
+                        <p>2025年11月21日(金) 19:00 ～ 11月23日(日) 18:50での開催が決定いたしました。</p>
+                        <p>pictSQUAREを使用したオンラインイベントとなります。詳細は順次お知らせいたします。</p>
+                    </div>
+                </details>
+            </div>
+
+            <!-- 新しいお知らせを追加する場合は、下記のテンプレートをコピーして使用してください -->
+            <!--
+            <div class="news-accordion">
+                <details>
+                    <summary>
+                        <div class="summary-header">
+                            <span class="news-date">2025.XX.XX</span>
+                            <span class="news-category">お知らせ</span>
+                            <span class="news-title">タイトルをここに入力</span>
+                            <span class="arrow">▶</span>
+                        </div>
+                    </summary>
+                    <div class="news-content">
+                        <p>お知らせの内容をここに記入します。</p>
+                    </div>
+                </details>
+            </div>
+            -->
+
+        </section>
+    </div>
+
+    <footer>
+        <p style="font-size: 1.2em; margin-bottom: 5px;">誰そ彼色に埋め尽くせ</p>
+        <p style="font-size: 0.9em; opacity: 0.8; margin-bottom: 10px;">タソガレドキ中心Webオンリーイベント</p>
+        <div class="footer-links">
+            <a href="https://pictsquare.net/da2rtmg9z4xrc56tdiz94ft4s3a20159" target="_blank">pictSQUAREイベントページ</a>
+            <a href="https://x.com/taso_web_only" target="_blank">タソ埋め告知X</a>
+        </div>
+    </footer>
+
+    <script>
+        // ローディング画面を非表示にする
+        window.addEventListener('load', function() {
+            setTimeout(function() {
+                const loading = document.getElementById('loading');
+                loading.classList.add('fade-out');
+            }, 500);
+        });
+
+        // アコーディオンのスムーズなアニメーション
+        document.querySelectorAll('details').forEach(detail => {
+            detail.addEventListener('toggle', function() {
+                if (this.open) {
+                    const content = this.querySelector('.news-content');
+                    content.style.animation = 'slideDown 0.3s ease-out';
+                }
+            });
+        });
+    </script>
+</body>
+</html>
