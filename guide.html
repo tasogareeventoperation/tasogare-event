@@ -700,6 +700,23 @@
                 }
             });
         });
+                // URLのハッシュで指定された位置にスクロール&アコーディオンを開く
+        window.addEventListener('DOMContentLoaded', function() {
+            if (window.location.hash) {
+                const target = document.querySelector(window.location.hash);
+                if (target) {
+                    // そのアコーディオンを開く
+                    const details = target.querySelector('details');
+                    if (details) {
+                        details.open = true;
+                    }
+                    // スクロール
+                    setTimeout(() => {
+                        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }, 100);
+                }
+            }
+        });
     </script>
 </body>
 </html>
